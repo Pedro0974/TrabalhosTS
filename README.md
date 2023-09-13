@@ -26,7 +26,7 @@ Pasta: [[Link para a pasta do Trabalho 1](https://github.com/Pedro0974/Trabalhos
 Cada pasta de trabalho ou projeto contém uma descrição detalhada e o código fonte correspondente. Você pode clonar este repositório para sua máquina local e explorar os trabalhos e projetos individualmente.
 
 ```bash
-git clone [[URL do Repositório](https://github.com/Pedro0974/TrabalhosTS)]
+git clone https://github.com/Pedro0974/TrabalhosTS
 ```
 ## Contribuidor 
 - [[Pedro Lucas](https://github.com/Pedro0974)]
