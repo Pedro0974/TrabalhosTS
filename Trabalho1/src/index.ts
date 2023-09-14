@@ -1,6 +1,7 @@
-import express from "express";
+import express, {Request, Response, Errback} from "express";
 import cors from "cors";
 import { users } from "./data";
+import { log } from "console";
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
@@ -93,11 +94,9 @@ app.post("/users/:userId/playlists", (req, res) => {
 
   // Verifique se todos os campos obrigatórios estão presentes
   if (!userId || !name || !tracks) {
-    return res
-      .status(400)
-      .json({
-        error: "Todos os campos são obrigatórios: userId, name e tracks.",
-      });
+    return res.status(400).json({
+      error: "Todos os campos são obrigatórios: userId, name e tracks.",
+    });
   }
 
   const user = users.find((user) => user.id === userId);
@@ -114,12 +113,10 @@ app.post("/users/:userId/playlists", (req, res) => {
 
   user.playlists.push(newPlaylist);
 
-  res
-    .status(201)
-    .json({
-      message: "Sua solicitação POST foi recebida com sucesso!",
-      newPlaylist,
-    });
+  res.status(201).json({
+    message: "Sua solicitação POST foi recebida com sucesso!",
+    newPlaylist,
+  });
 });
 
 // Exercício 7.1: Atualizando uma Playlist (Método PUT)
@@ -139,8 +136,8 @@ app.put("/users/:userId/playlist/:playlistId", (req, res) => {
   const playlistId = req.params.playlistId;
   const newName = req.body.name;
 
-  if(!newName) {
-    return res.status(400).json({ error: 'Informe o nome da playlist!'})
+  if (!newName) {
+    return res.status(400).json({ error: "Informe o nome da playlist!" });
   }
 
   const user = users.find((user) => user.id === userId);
@@ -159,8 +156,9 @@ app.put("/users/:userId/playlist/:playlistId", (req, res) => {
 
   playlist.name = newName;
 
-  res.status(200).json({ message: 'Nome da playlist atualizado com sucesso!', playlist });
-
+  res
+    .status(200)
+    .json({ message: "Nome da playlist atualizado com sucesso!", playlist });
 });
 
 // Exercício 8: Deletando uma Playlist (Método DELETE)
@@ -168,26 +166,116 @@ app.put("/users/:userId/playlist/:playlistId", (req, res) => {
 // 2. Instruções:
 // Adicione uma rota DELETE para "/users/:userId/playlists/:playlistId" para remover uma playlist existente.
 // Se o userId ou playlistId fornecidos na URL não existirem, retorne um código de status 404 (Not Found)
-app.delete('/users/:userId/playlists/:playlistId', (req, res) => {
-    const userId = req.params.userId;
-    const playlistId = req.params.playlistId;
-  
-    const user = users.find((user) => user.id === userId);
-  
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado!' });
+app.delete("/users/:userId/playlists/:playlistId", (req, res) => {
+  const userId = req.params.userId;
+  const playlistId = req.params.playlistId;
+
+  const user = users.find((user) => user.id === userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "Usuário não encontrado!" });
+  }
+
+  const playlistIndex = user.playlists.findIndex(
+    (playlist) => playlist.id === playlistId
+  );
+
+  if (playlistIndex === -1) {
+    return res.status(404).json({ error: "Playlist não encontrada!" });
+  }
+
+  user.playlists.splice(playlistIndex, 1);
+
+  res.status(204).json({ message: "Playlist Deletada com Sucesso!" });
+});
+
+// app.post("/users/:userId/playlists/:playlistId/tracks", (req, res) => {
+//   const userId = req.params.userId;
+//   const playlistId = req.params.playlistId;
+//   const trackName = req.body.trackName;
+//   const duration = req.body.duration;
+
+//   console.log(trackName);
+//   console.log(duration);
+
+//   const user = users.find((user) => user.id === userId);
+
+//   const playlist = user?.playlists.find(
+//     (playlist) => playlist.id === playlistId
+//   );
+//   if (!userId) {
+//     res.status(404).json({ error: "User not found" });
+//   } else if (!playlistId) {
+//     res.status(404).json({ error: "Playlist not found" });
+//   } else if (!trackName || !duration) {
+//     res.status(400).json({ error: "Bad Request, missing fields." });
+//   } else if (duration <= 0 || typeof duration == "string") {
+//     res.status(422).json({ error: "Unprocessable Entity, invalid duration" });
+//   } else if (!playlist?.name.includes(trackName)) {
+//     res.status(409).json({ error: "Conflict, track already exists" });
+//   } else {
+//     const newTrack = {
+//       id: uuidv4(),
+//       trackName,
+//       duration,
+//       name: "",
+//       artist: "",
+//       url: "",
+//     };
+
+//     playlist?.tracks.push(newTrack);
+
+//     res.status(201).json({ message: "Track added successfully" });
+//   }
+// });
+
+app.post("/users/:userId/playlists/:playlistId/tracks", (req: Request, res: Response, err: Errback) => {
+  const userId = req.params.userId;
+  const playlistId = req.params.playlistId;
+  const trackName = req.body.trackName;
+  const duration = req.body.duration;
+
+  const user = users.find((user) => user.id === userId);
+
+  const playlist = user?.playlists.find(
+    (playlist) => playlist.id === playlistId
+  );
+
+  try {
+    if (!userId) {
+      res.status(404);
+      throw Error("User not found");
+    } else if (!playlistId) {
+      res.status(404);
+      throw Error("Playlist not found");
+    } else if (!trackName || !duration) {
+      res.status(400);
+      throw Error("Bad Request, missing fields.");
+    } else if (duration <= 0 || typeof duration == "string") {
+      res.status(422);
+      throw Error("Unprocessable Entity, invalid duration");
+    } else if (!playlist?.tracks.includes(trackName)) {
+      console.log(playlist);
+      res.status(409);
+      throw Error("Conflict, track already exists");
     }
-  
-    const playlistIndex = user.playlists.findIndex((playlist) => playlist.id === playlistId);
-  
-    if (playlistIndex === -1) {
-      return res.status(404).json({ error: 'Playlist não encontrada!' });
-    }
-  
-    user.playlists.splice(playlistIndex, 1);
-  
-    res.status(204).json({ message: 'Playlist Deletada com Sucesso!'});
-  });
+    const newTrack = {
+      id: uuidv4(),
+      trackName,
+      duration,
+      name: "",
+      artist: "",
+      url: "",
+    };
+
+    playlist?.tracks.push(newTrack);
+
+    res.status(201).json({ message: "Track added successfully" }).end();
+
+  } catch (err) {
+    res.send(err.message).end();
+  }
+});
 
 app.listen(3003, () => {
   console.log("Server is running in http://localhost:3003");
