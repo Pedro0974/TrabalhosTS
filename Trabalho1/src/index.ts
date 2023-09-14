@@ -273,7 +273,7 @@ app.post("/users/:userId/playlists/:playlistId/tracks", (req: Request, res: Resp
     res.status(201).json({ message: "Track added successfully" }).end();
 
   } catch (err) {
-    res.send(err.message).end();
+    res.send(err).end();
   }
 });
 
