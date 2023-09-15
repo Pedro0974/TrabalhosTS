@@ -230,35 +230,43 @@ app.delete("/users/:userId/playlists/:playlistId", (req, res) => {
 // });
 
 app.post("/users/:userId/playlists/:playlistId/tracks", (req: Request, res: Response, err: Errback) => {
-  const userId = req.params.userId;
-  const playlistId = req.params.playlistId;
-  const trackName = req.body.trackName;
-  const duration = req.body.duration;
-
-  const user = users.find((user) => user.id === userId);
-
-  const playlist = user?.playlists.find(
-    (playlist) => playlist.id === playlistId
-  );
-
   try {
-    if (!userId) {
-      res.status(404);
-      throw Error("User not found");
-    } else if (!playlistId) {
-      res.status(404);
-      throw Error("Playlist not found");
-    } else if (!trackName || !duration) {
-      res.status(400);
-      throw Error("Bad Request, missing fields.");
-    } else if (duration <= 0 || typeof duration == "string") {
-      res.status(422);
-      throw Error("Unprocessable Entity, invalid duration");
-    } else if (!playlist?.tracks.includes(trackName)) {
-      console.log(playlist);
-      res.status(409);
-      throw Error("Conflict, track already exists");
+    const userId = req.params.userId;
+    const playlistId = req.params.playlistId;
+    const user = users.find((user) => user.id === userId);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
     }
+
+    const playlist = user.playlists.find((playlist) => playlist.id === playlistId);
+
+    if (!playlist) {
+      res.status(404).json({ error: "Playlist not found" });
+      return;
+    }
+
+    const trackName = req.body.trackName;
+    const duration = req.body.duration;
+
+    if (!trackName || !duration) {
+      res.status(400).json({ error: "Bad Request, missing fields." });
+      return;
+    }
+
+    if (typeof duration !== "number" || duration <= 0) {
+      res.status(422).json({ error: "Unprocessable Entity, invalid duration" });
+      return;
+    }
+
+    const trackExists = playlist.tracks.some((track) => track.name === trackName);
+
+    if (trackExists) {
+      res.status(409).json({ error: "Conflict, track already exists" });
+      return;
+    }
+
     const newTrack = {
       id: uuidv4(),
       trackName,
@@ -268,14 +276,15 @@ app.post("/users/:userId/playlists/:playlistId/tracks", (req: Request, res: Resp
       url: "",
     };
 
-    playlist?.tracks.push(newTrack);
+    playlist.tracks.push(newTrack);
 
-    res.status(201).json({ message: "Track added successfully" }).end();
+    res.status(201).json({ message: "Track added successfully" });
 
   } catch (err) {
-    res.send(err).end();
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 app.listen(3003, () => {
   console.log("Server is running in http://localhost:3003");
