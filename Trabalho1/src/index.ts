@@ -252,19 +252,16 @@ app.post("/users/:userId/playlists/:playlistId/tracks", (req: Request, res: Resp
 
     if (!trackName || !duration) {
       res.status(400).json({ error: "Bad Request, missing fields." });
-      return;
     }
 
     if (typeof duration !== "number" || duration <= 0) {
       res.status(422).json({ error: "Unprocessable Entity, invalid duration" });
-      return;
     }
 
     const trackExists = playlist.tracks.some((track) => track.name === trackName);
 
     if (trackExists) {
       res.status(409).json({ error: "Conflict, track already exists" });
-      return;
     }
 
     const newTrack = {
