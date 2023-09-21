@@ -8,7 +8,7 @@ Neste repositório, você encontrará uma coleção de projetos e trabalhos prá
 
 ## Estrutura do Repositório
 
-O repositório está organizado da seguinte forma:
+O repositório está organizado da seguinte forma: 
 
 - **Trabalho1/**: Trabalho realizado para criação de um CRUD de apis utilizando o Express Junto do TypeScript.
 - **Trabalho2/**: ...
